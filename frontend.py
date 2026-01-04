@@ -15,6 +15,7 @@ def create_new_chat():
     st.session_state["message_history"] = []
 
 def add_thread(thread_id):
+    st.session_state['chat_cnt'] += 1
     if thread_id not in st.session_state['chat_threads']:
         st.session_state['chat_threads'].append(thread_id)
 
@@ -29,6 +30,9 @@ if 'message_history' not in st.session_state:
 if 'thread_id' not in st.session_state:
     st.session_state['thread_id'] = generate_thread_id()
 
+if 'chat_cnt' not in st.session_state:
+    st.session_state['chat_cnt'] = 0
+
 if 'chat_threads' not in st.session_state:
     st.session_state['chat_threads'] = []
     add_thread(st.session_state['thread_id'])
@@ -38,10 +42,11 @@ if 'chat_threads' not in st.session_state:
 st.sidebar.title("Chatbot")
 st.sidebar.button("New Chat", on_click=create_new_chat)
 st.sidebar.header("Past Conversations")
-for thread_id in st.session_state["chat_threads"]:
-    if st.sidebar.button(str(thread_id)):
+for idx, thread_id in enumerate(st.session_state["chat_threads"], start=1):
+    if st.sidebar.button(f"Chat {idx}", key=str(thread_id)):
         st.session_state['thread_id'] = thread_id
         messages = load_conversations(thread_id)
+
         temp_messages = []
         for message in messages:
             if isinstance(message, HumanMessage):
