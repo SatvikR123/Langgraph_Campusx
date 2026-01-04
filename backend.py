@@ -11,7 +11,7 @@ class chatState(TypedDict):
     messages : Annotated[List[BaseMessage], add_messages]
 
 from langchain_google_genai import ChatGoogleGenerativeAI
-llm = ChatGoogleGenerativeAI(model="gemini-2.5-flash")
+llm = ChatGoogleGenerativeAI(model="gemini-2.5-flash-lite")
 
 def chat_node(state:chatState):
     # take user query from state
@@ -28,7 +28,8 @@ graph.add_edge(START, "chat_node")
 graph.add_edge("chat_node", END)
 
 chatbot = graph.compile(checkpointer=checkpointer)
-
+# chatbot.invoke({"messages":"Hello how are you"}, config={"configurable":{"thread_id":"thread-1"}})
+# print(chatbot.get_state(config={"configurable":{"thread_id":"thread-1"}}).values["messages"])
 """
 ------------------------
 Streaming Implementation
