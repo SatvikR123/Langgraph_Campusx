@@ -9,19 +9,25 @@ def generate_thread_id():
     return uuid.uuid4()
 
 def create_new_chat():
-    thread_id = generate_thread_id()
-    st.session_state['thread_id'] = thread_id
-    add_thread(st.session_state['thread_id'])
-    st.session_state["message_history"] = []
+    if len(st.session_state["message_history"]) > 0:
+        thread_id = generate_thread_id()
+        st.session_state['thread_id'] = thread_id
+        add_thread(st.session_state['thread_id'])
+        st.session_state["message_history"] = []
 
 def add_thread(thread_id):
-    st.session_state['chat_cnt'] += 1
     if thread_id not in st.session_state['chat_threads']:
         st.session_state['chat_threads'].append(thread_id)
 
 def load_conversations(thread_id):
-    return chatbot.get_state(config={"configurable":{"thread_id":thread_id}}).values["messages"]
+    state = chatbot.get_state(
+        config={"configurable": {"thread_id": thread_id}}
+    )
+    # Backend means chatbot may not have any message yet 
+    if not state or "messages" not in state.values:
+        return []
 
+    return state.values["messages"]
 # --------------------------------Session Setup--------------------------------
 
 if 'message_history' not in st.session_state:
@@ -30,13 +36,9 @@ if 'message_history' not in st.session_state:
 if 'thread_id' not in st.session_state:
     st.session_state['thread_id'] = generate_thread_id()
 
-if 'chat_cnt' not in st.session_state:
-    st.session_state['chat_cnt'] = 0
-
 if 'chat_threads' not in st.session_state:
     st.session_state['chat_threads'] = []
-    add_thread(st.session_state['thread_id'])
-
+    
 # --------------------------------Sidebar UI--------------------------------
 
 st.sidebar.title("Chatbot")
@@ -82,3 +84,4 @@ if user_input:
         ai_message = st.write_stream(message_chunk for message_chunk, metadata in stream)
     
     st.session_state['message_history'].append({'role': 'assistant', 'content': ai_message})
+    add_thread(st.session_state['thread_id']) # Add the new chat's thread only after one message atleast
